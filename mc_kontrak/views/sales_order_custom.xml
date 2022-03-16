@@ -7,7 +7,7 @@
             <field name="arch" type="xml">
                 <div class="oe_button_box" name="button_box">
                     <button
-                            name="action_view_so_button"
+                            name="mc_kontrak.action_report_kontrak"
                             type="object"
                             class="oe_stat_button"
                             string="Cetak WO"
@@ -28,29 +28,23 @@
                        position="attributes">
                     <attribute name="readonly">True</attribute>
                 </xpath>
-                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='price_unit']"
-                       position="attributes">
-                    <attribute name="readonly">False</attribute>
-                </xpath>
 
                 <!-- Hidden some column in SO Line -->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='name']"
                        position="attributes">
                     <attribute name="invisible">True</attribute>
                 </xpath>
-                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_uom_qty']"
-                       position="attributes">
-                    <attribute name="invisible">True</attribute>
-                </xpath>
-                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='tax_id']"
-                       position="attributes">
-                    <attribute name="invisible">True</attribute>
-                </xpath>
                 <!-- End of hidden -->
+<!--                Rename Column-->
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='qty_delivered']"
+                       position="attributes">
+                    <attribute name="string">QTY Terpasang</attribute>
+                </xpath>
+<!--                -->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='name']"
                        position="after">
                     <field name="x_mc_qty_kontrak" readonly="1"></field>
-                    <field name="x_mc_qty_terpasang"></field>
+<!--                    <field name="x_mc_qty_terpasang"></field>-->
                 </xpath>
             </field>
         </record>

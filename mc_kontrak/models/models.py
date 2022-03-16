@@ -10,8 +10,8 @@ class mc_kontrak(models.Model):
     name = fields.Char(string='No Kontrak', readonly=True, default='New')
     mc_cust = fields.Many2one('res.partner', string='Customer')
     mc_pic_cust = fields.Char(string='PIC Customer')
-    start_date = fields.Date(string='Start Date', readonly=True, store=True, default=fields.Datetime.now())
-    end_date = fields.Date(string='End Date', readonly=False, copy=False)
+    # start_date = fields.Date(string='Start Date', readonly=True, store=True, default=fields.Datetime.now())
+    # end_date = fields.Date(string='End Date', readonly=False, copy=False)
     mc_total = fields.Float(string='Total', readonly=True, compute='total_harga', store=True)
     mc_isopen = fields.Boolean(default=True)
 
@@ -49,6 +49,22 @@ class mc_kontrak(models.Model):
         action['context'] = {}
         return action
 
+    # Button untuk membuat SO baru dari Kontrak
+    def action_create_so_button(self):
+        for row in self:
+            partner_id = row.mc_cust.id
+
+        return {
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'sale.order',
+            'context': {
+                'default_partner_id': partner_id,
+                'default_kontrak_id': self.id
+            }
+        }
+
     @api.depends('product_order_line')
     def _hitung_qty_belum_terpasang(self):
         for row in self.product_order_line:
@@ -80,9 +96,10 @@ class ProductOrderLine(models.Model):
     mc_period = fields.Integer(string='Period')
     mc_period_info = fields.Selection([
         ('bulan', 'Bulan'),
+        ('tahun', 'Tahun'),
         ('unit', 'Unit')
-    ], string='Keterangan')
-    mc_payment = fields.Float(string='Payment', readonly=True, compute='_hitung_subtotal', store=True)
+    ], string='UoM')
+    mc_payment = fields.Float(string='Subtotal', readonly=True, compute='_hitung_subtotal', store=True)
     mc_total = fields.Float(string='Total', readonly=True, store=True)
     mc_isopen = fields.Boolean(default=True)
 
@@ -96,7 +113,12 @@ class ProductOrderLine(models.Model):
         grandtotal = 0
 
         for line in self:
-            price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period
+            price = 0
+            if line.mc_period_info == 'tahun':
+                price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period * 12
+            else:
+                price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period
+
             subtotal += price
             line.update({
                 'mc_payment': price,
@@ -121,25 +143,24 @@ class CustomSalesOrder(models.Model):
 
     x_order_line = fields.One2many('sale.order.line', 'order_id')
     x_mc_qty_kontrak = fields.Integer(string='Quantity Kontrak')
-    x_mc_qty_terpasang = fields.Integer(string='Quantity Terpasang')
-    x_mc_harga_produk = fields.Monetary(string='Standard Price')
+    # x_mc_qty_terpasang = fields.Integer(string='Quantity Terpasang')
+    # x_mc_harga_produk = fields.Monetary(string='Standard Price')
     x_mc_isopen = fields.Boolean()
 
     def write(self, vals):
         if ('order_line' in vals):
             res = super(CustomSalesOrder, self).write(vals)
             arr_order_line = vals['order_line']
-
+            print(arr_order_line)
             so_line = self.x_order_line
             if so_line:
                 i = 0
                 for row in so_line:
-                    print(i)
-                    if arr_order_line[i][2]['x_mc_qty_terpasang']:
-                        x_qty_terpasang = arr_order_line[i][2]['x_mc_qty_terpasang']
-                        print('x_qty_terpasang = ', x_qty_terpasang)
+                    if arr_order_line[i][2]['product_uom_qty']:
+                        x_qty_terpasang = arr_order_line[i][2]['product_uom_qty']
+                        print('product_uom_qty = ', x_qty_terpasang)
 
-                        query = "SELECT coalesce(SUM(sol.x_mc_qty_terpasang), 0) FROM public.sale_order so " \
+                        query = "SELECT coalesce(SUM(sol.product_uom_qty), 0) FROM public.sale_order so " \
                                 "JOIN public.sale_order_line sol " \
                                 "ON sol.order_id = so.id " \
                                 "WHERE so.state NOT IN('cancel') AND " \
@@ -174,10 +195,8 @@ class CustomSalesOrder(models.Model):
                 self.env.cr.execute(query)
             return res
 
-
     # Auto fill Order Line
     def insert_kontrak(self):
-        # print('lsakdlsakd')
         print('insert kontrak func')
         kontrak_id = self.kontrak_id
         partner = self.partner_id
@@ -187,18 +206,17 @@ class CustomSalesOrder(models.Model):
         if kontrak_line:
             for row in kontrak_line.product_order_line:
                 values = {}
-                product = row.product_id.id
 
                 # Cek jika status produk open, masukkan ke SO
                 if row.mc_isopen:
                     values['product_id'] = row.product_id.id
                     values['kontrak_line_id'] = row.id
                     values['x_mc_qty_kontrak'] = row.mc_qty_kontrak
-                    values['x_mc_qty_terpasang'] = row.mc_qty_belum_terpasang
+                    values['qty_delivered'] = row.mc_qty_belum_terpasang
                     values['kontrak_id'] = kontrak_id.id
-                    values['x_mc_harga_produk'] = row.mc_harga_produk
-                    values['x_mc_isopen'] = row.mc_isopen
                     values['price_unit'] = row.mc_harga_produk
+                    values['x_mc_isopen'] = row.mc_isopen
+                    values['discount'] = row.mc_harga_diskon
                     values['product_uom_qty'] = row.mc_qty_belum_terpasang
 
                     terms.append((0, 0, values))
@@ -208,7 +226,7 @@ class CustomSalesOrder(models.Model):
     def action_cancel(self):
         print('test cancel')
         query = """
-            SELECT x_mc_qty_terpasang, kontrak_line_id  FROM sale_order_line sol 
+            SELECT product_uom_qty, kontrak_line_id  FROM sale_order_line sol 
             WHERE sol.order_id  = %s
         """ % (self.id)
 
@@ -226,7 +244,7 @@ class CustomSalesOrder(models.Model):
                     mc_qty_terpasang = mc_qty_terpasang - %s,
                     mc_qty_belum_terpasang = mc_qty_belum_terpasang + %s
                     where id = %s 
-                """ % (row['x_mc_qty_terpasang'], row['x_mc_qty_terpasang'], row['kontrak_line_id'])
+                """ % (row['product_uom_qty'], row['product_uom_qty'], row['kontrak_line_id'])
                 self.env.cr.execute(query)
 
         query = """
