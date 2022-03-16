@@ -23,6 +23,9 @@
                             type="object"
                             string="Insert Kontrak"/>
                 </field>
+                <field name="validity_date" position="before">
+                    <field name="x_start_date"/>
+                </field>
                 <!-- Readonly column -->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_id']"
                        position="attributes">

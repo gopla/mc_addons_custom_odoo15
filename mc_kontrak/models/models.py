@@ -19,6 +19,7 @@ class mc_kontrak(models.Model):
 
     # Relasi
     product_order_line = fields.One2many('mc_kontrak.product_order_line', 'kontrak_id', string='No Kontrak')
+    histori_so_line = fields.One2many('mc_kontrak.histori_so', 'x_kontrak_id', string='Histori SO')
 
     @api.model
     def create(self, vals_list):
@@ -102,6 +103,7 @@ class ProductOrderLine(models.Model):
     mc_payment = fields.Float(string='Subtotal', readonly=True, compute='_hitung_subtotal', store=True)
     mc_total = fields.Float(string='Total', readonly=True, store=True)
     mc_isopen = fields.Boolean(default=True)
+    mc_unit_price = fields.Monetary(string='Unit Price')
 
     # @api.depends('mc_qty_kontrak')
     # def _hitung_qty_blm_terpasang(self):
@@ -114,14 +116,18 @@ class ProductOrderLine(models.Model):
 
         for line in self:
             price = 0
+            unitPrice = 0
             if line.mc_period_info == 'tahun':
                 price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period * 12
+                unitPrice = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_period * 12
             else:
                 price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period
+                unitPrice = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_period
 
             subtotal += price
             line.update({
                 'mc_payment': price,
+                'mc_unit_price': unitPrice,
                 'mc_qty_belum_terpasang': line.mc_qty_kontrak
             })
 
@@ -146,53 +152,55 @@ class CustomSalesOrder(models.Model):
     # x_mc_qty_terpasang = fields.Integer(string='Quantity Terpasang')
     # x_mc_harga_produk = fields.Monetary(string='Standard Price')
     x_mc_isopen = fields.Boolean()
+    x_start_date = fields.Date(string='Start Date')
 
     def write(self, vals):
+        print('method write diakses')
         if ('order_line' in vals):
             res = super(CustomSalesOrder, self).write(vals)
             arr_order_line = vals['order_line']
             print(arr_order_line)
-            so_line = self.x_order_line
-            if so_line:
-                i = 0
-                for row in so_line:
-                    if arr_order_line[i][2]['product_uom_qty']:
-                        x_qty_terpasang = arr_order_line[i][2]['product_uom_qty']
-                        print('product_uom_qty = ', x_qty_terpasang)
-
-                        query = "SELECT coalesce(SUM(sol.product_uom_qty), 0) FROM public.sale_order so " \
-                                "JOIN public.sale_order_line sol " \
-                                "ON sol.order_id = so.id " \
-                                "WHERE so.state NOT IN('cancel') AND " \
-                                "sol.kontrak_line_id = %s AND " \
-                                "sol.id != %s" % (row.kontrak_line_id.id, row.id)
-                        print(query)
-                        self.env.cr.execute(query)
-                        x_qty_terpasang2 = self.env.cr.fetchone()[0]
-                        print('x_qty_terpasang2 = ', x_qty_terpasang2)
-                        total_terpasang = x_qty_terpasang + x_qty_terpasang2
-                        print('total_terpasang = ', total_terpasang)
-
-                        query = "UPDATE public.mc_kontrak_product_order_line SET mc_qty_terpasang = %s, " \
-                                "mc_qty_belum_terpasang = (mc_qty_kontrak - %s) " \
-                                "WHERE id = %s" % (total_terpasang, total_terpasang, row.kontrak_line_id.id)
-                        self.env.cr.execute(query)
-                        if query:
-                            print('oke')
-                    i = i + 1
-                query = """
-                    update mc_kontrak_mc_kontrak set
-                    mc_isopen = False
-                    where id = %s
-                    and 0 = (
-                        select SUM(mkpol.mc_qty_belum_terpasang) as mc_qty_belum_terpasang
-                        from mc_kontrak_mc_kontrak mkmk
-                        join mc_kontrak_product_order_line mkpol on mkpol.kontrak_id = mkmk.id
-                        where mkmk.id = %s
-                    )
-                """ % (self.kontrak_id.id, self.kontrak_id.id)
-                print(query)
-                self.env.cr.execute(query)
+            # so_line = self.x_order_line
+            # if so_line:
+            #     i = 0
+            #     for row in so_line:
+            #         if arr_order_line[i][2]['product_uom_qty']:
+            #             x_qty_terpasang = arr_order_line[i][2]['product_uom_qty']
+            #             print('product_uom_qty = ', x_qty_terpasang)
+            #
+            #             query = "SELECT coalesce(SUM(sol.product_uom_qty), 0) FROM public.sale_order so " \
+            #                     "JOIN public.sale_order_line sol " \
+            #                     "ON sol.order_id = so.id " \
+            #                     "WHERE so.state NOT IN('cancel') AND " \
+            #                     "sol.kontrak_line_id = %s AND " \
+            #                     "sol.id != %s" % (row.kontrak_line_id.id, row.id)
+            #             print(query)
+            #             self.env.cr.execute(query)
+            #             x_qty_terpasang2 = self.env.cr.fetchone()[0]
+            #             print('x_qty_terpasang2 = ', x_qty_terpasang2)
+            #             total_terpasang = x_qty_terpasang + x_qty_terpasang2
+            #             print('total_terpasang = ', total_terpasang)
+            #
+            #             query = "UPDATE public.mc_kontrak_product_order_line SET mc_qty_terpasang = %s, " \
+            #                     "mc_qty_belum_terpasang = (mc_qty_kontrak - %s) " \
+            #                     "WHERE id = %s" % (total_terpasang, total_terpasang, row.kontrak_line_id.id)
+            #             self.env.cr.execute(query)
+            #             if query:
+            #                 print('oke')
+            #         i = i + 1
+            #     query = """
+            #         update mc_kontrak_mc_kontrak set
+            #         mc_isopen = False
+            #         where id = %s
+            #         and 0 = (
+            #             select SUM(mkpol.mc_qty_belum_terpasang) as mc_qty_belum_terpasang
+            #             from mc_kontrak_mc_kontrak mkmk
+            #             join mc_kontrak_product_order_line mkpol on mkpol.kontrak_id = mkmk.id
+            #             where mkmk.id = %s
+            #         )
+            #     """ % (self.kontrak_id.id, self.kontrak_id.id)
+            #     print(query)
+            #     self.env.cr.execute(query)
             return res
 
     # Auto fill Order Line
@@ -214,7 +222,7 @@ class CustomSalesOrder(models.Model):
                     values['x_mc_qty_kontrak'] = row.mc_qty_kontrak
                     values['qty_delivered'] = row.mc_qty_belum_terpasang
                     values['kontrak_id'] = kontrak_id.id
-                    values['price_unit'] = row.mc_harga_produk
+                    values['price_unit'] = row.mc_unit_price
                     values['x_mc_isopen'] = row.mc_isopen
                     values['discount'] = row.mc_harga_diskon
                     values['product_uom_qty'] = row.mc_qty_belum_terpasang
@@ -254,6 +262,76 @@ class CustomSalesOrder(models.Model):
 
         res = super(CustomSalesOrder, self).action_cancel()
         return res
+
+    def action_confirm(self):
+        print('action confirm tes')
+        print(self.id)
+        print(self.x_order_line)
+        so_line = self.x_order_line
+        if so_line:
+            i = 0
+            for row in so_line:
+                # if arr_order_line[i][2]['product_uom_qty']:
+                # x_qty_terpasang = arr_order_line[i][2]['product_uom_qty']
+
+                x_qty_terpasang = row.product_uom_qty
+                print('product_uom_qty = ', x_qty_terpasang)
+
+                query = "SELECT coalesce(SUM(sol.product_uom_qty), 0) FROM public.sale_order so " \
+                        "JOIN public.sale_order_line sol " \
+                        "ON sol.order_id = so.id " \
+                        "WHERE so.state NOT IN('cancel') AND " \
+                        "sol.kontrak_line_id = %s AND " \
+                        "sol.id != %s" % (row.kontrak_line_id.id, row.id)
+                self.env.cr.execute(query)
+                x_qty_terpasang2 = self.env.cr.fetchone()[0]
+                total_terpasang = x_qty_terpasang + x_qty_terpasang2
+
+                query = "UPDATE public.mc_kontrak_product_order_line SET mc_qty_terpasang = %s, " \
+                        "mc_qty_belum_terpasang = (mc_qty_kontrak - %s) " \
+                        "WHERE id = %s" % (total_terpasang, total_terpasang, row.kontrak_line_id.id)
+                self.env.cr.execute(query)
+
+                query = """
+                    SELECT mc_period, mc_period_info FROM mc_kontrak_product_order_line 
+                    WHERE kontrak_id = %s 
+                """ % self.kontrak_id.id
+
+                self.env.cr.execute(query)
+                getPeriod = self.env.cr.dictfetchone()
+                periode = str(getPeriod['mc_period']) + " " + str(getPeriod['mc_period_info'])
+
+                query = """
+                            INSERT INTO mc_kontrak_histori_so(x_kontrak_id,
+                            x_order_id, x_tgl_start, x_tgl_end, x_item, x_period, x_status_pembayaran,
+                            x_note) VALUES ('%s','%s','%s','%s','%s','%s','%s','')
+                        """ % (self.kontrak_id.id, row.order_id.id, self.x_start_date, self.validity_date,row.product_id.id,
+                               periode, self.state)
+                self.env.cr.execute(query)
+
+                if query:
+                    print('oke, qty dikurangi, histori so dimasukkan')
+                i = i + 1
+            query = """
+                            update mc_kontrak_mc_kontrak set
+                            mc_isopen = False
+                            where id = %s
+                            and 0 = (
+                                select SUM(mkpol.mc_qty_belum_terpasang) as mc_qty_belum_terpasang
+                                from mc_kontrak_mc_kontrak mkmk
+                                join mc_kontrak_product_order_line mkpol on mkpol.kontrak_id = mkmk.id
+                                where mkmk.id = %s
+                            )
+                        """ % (self.kontrak_id.id, self.kontrak_id.id)
+            self.env.cr.execute(query)
+
+            query = """
+                            UPDATE sale_order SET state = 'sale' WHERE id = %s
+                    """ % self.id
+            self.env.cr.execute(query)
+
+            res = super(CustomSalesOrder, self).action_confirm()
+            return res
 
 
 class CustomSalesOrderLine(models.Model):

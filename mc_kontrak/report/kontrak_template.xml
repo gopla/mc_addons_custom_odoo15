@@ -16,8 +16,10 @@
             <br/>
 
             <p>
-                Perjanjian kerja sama ini (<b>"Perjanjian"</b>), dibuat dan ditandatangani pada hari ini tanggal <span
-                    t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span> (<b>"Tanggal Efektif"</b>)
+                Perjanjian kerja sama ini (<b>"Perjanjian"</b>), dibuat dan ditandatangani pada hari ini tanggal
+<!--                <span-->
+<!--                    t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
+                (<b>"Tanggal Efektif"</b>)
                 oleh dan antara:
             </p>
             <p>
@@ -97,11 +99,13 @@
                 <ol>
                     <li>
                         Perjanjian ini berlaku selama 12 (dua belas) bulan terhitung sejak tanggal
-                        <span
-                                t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>
+<!--                        <span-->
+<!--                                t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
                         sampai
-                        dengan tanggal <span
-                            t-field="doc.end_date" t-options='{"format":"dd MMMM yyyy"}'></span> (<b>"Jangka Waktu"</b>).
+                        dengan tanggal
+<!--                        <span-->
+<!--                            t-field="doc.end_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
+                        (<b>"Jangka Waktu"</b>).
                     </li>
 
                     <li>
