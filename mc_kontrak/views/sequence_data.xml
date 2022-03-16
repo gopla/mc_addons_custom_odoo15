@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Sequences for mc_kontrak.mc_kontrak -->
+        <record id="seq_mckontrak" model="ir.sequence">
+            <field name="name">Contract</field>
+            <field name="code">mc_kontrak.mc_kontrak</field>
+            <field name="prefix">CT-%(day)s%(month)s%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!--        Sequence for sale.order-->
+        <record id="seq_sale_order" model="ir.sequence">
+            <field name="name">Sales Order</field>
+            <field name="code">sale.order</field>
+            <field name="prefix">SO-%(day)s%(month)s%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</odoo>

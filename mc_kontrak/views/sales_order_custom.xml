@@ -1,0 +1,58 @@
+<odoo>
+    <data>
+        <record id="saleorder_inherit" model="ir.ui.view">
+            <field name="name">sale.order.inherit</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                <div class="oe_button_box" name="button_box">
+                    <button
+                            name="action_view_so_button"
+                            type="object"
+                            class="oe_stat_button"
+                            string="Cetak WO"
+                            icon="fa-cog">
+<!--                        <field string="Cetak WO" name="so_count" widget="statinfo"/>-->
+                    </button>
+                </div>
+                <field name="partner_id" position="after">
+                    <field name="kontrak_id" domain="[('mc_cust','=', partner_id), ('mc_isopen','=','true')]"/>
+                </field>
+                <field name="kontrak_id" position="after">
+                    <button name="insert_kontrak"
+                            type="object"
+                            string="Insert Kontrak"/>
+                </field>
+                <!-- Readonly column -->
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_id']"
+                       position="attributes">
+                    <attribute name="readonly">True</attribute>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='price_unit']"
+                       position="attributes">
+                    <attribute name="readonly">False</attribute>
+                </xpath>
+
+                <!-- Hidden some column in SO Line -->
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='name']"
+                       position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_uom_qty']"
+                       position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='tax_id']"
+                       position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
+                <!-- End of hidden -->
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='name']"
+                       position="after">
+                    <field name="x_mc_qty_kontrak" readonly="1"></field>
+                    <field name="x_mc_qty_terpasang"></field>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

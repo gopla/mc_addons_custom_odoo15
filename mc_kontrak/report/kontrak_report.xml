@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_report_kontrak" model="ir.actions.report">
+            <field name="name">Contracts</field>
+            <field name="model">mc_kontrak.mc_kontrak</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">mc_kontrak.report_kontrak</field>
+            <field name="report_file">mc_kontrak.report_kontrak</field>
+            <field name="print_report_name">('Contract - %s' % (object.name)) or 'Contract - %s' % (object.name)
+            </field>
+            <field name="binding_model_id" ref="model_mc_kontrak_mc_kontrak"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>
