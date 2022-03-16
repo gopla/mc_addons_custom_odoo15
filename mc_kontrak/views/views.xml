@@ -9,6 +9,8 @@
                     <field name="name"/>
                     <field name="mc_cust"/>
                     <field name="mc_total"/>
+                    <field name="mc_state" string="Status" decoration-success="mc_state == 'sale' or mc_state == 'done'"
+                           decoration-info="mc_state == 'draft' or mc_state == 'sent'" widget="badge" optional="show"/>
                 </tree>
             </field>
         </record>
@@ -31,6 +33,16 @@
             <field name="model">mc_kontrak.mc_kontrak</field>
             <field name="arch" type="xml">
                 <form string="Form Kontrak">
+                    <header>
+                        <button name="action_confirm" id="action_confirm" data-hotkey="v"
+                                string="Confirm Contract" class="btn-primary" type="object"
+                                attrs="{'invisible': [('mc_state', 'not in', ['draft'])]}"/>
+                        <button name="action_cancel" id="action_confirm" data-hotkey="v"
+                                string="Cancel Contract" class="btn-secondary" type="object"
+                                attrs="{'invisible': [('mc_state', 'not in', ['draft'])]}"/>
+
+                        <field name="mc_state" widget="statusbar" statusbar_visible="draft,done"/>
+                    </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
                             <button
@@ -55,10 +67,15 @@
                         </div>
 
                         <group>
-                            <field name="mc_cust"/>
-                            <field name="mc_pic_cust"/>
-<!--                            <field name="start_date"/>-->
-<!--                            <field name="end_date"/>-->
+                            <group>
+                                <field name="mc_cust"/>
+                                <field name="mc_pic_cust"/>
+                            </group>
+                            <group>
+                                <field name="mc_create_date"/>
+                                <field name="mc_confirm_date"/>
+                                <field name="mc_sales"/>
+                            </group>
                         </group>
                         <notebook>
                             <page string="Product Order Line" name="product_order">

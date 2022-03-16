@@ -7,10 +7,10 @@
             <field name="arch" type="xml">
                 <div class="oe_button_box" name="button_box">
                     <button
-                            name="mc_kontrak.action_report_kontrak"
+                            name="action_report_wo_spk"
                             type="object"
                             class="oe_stat_button"
-                            string="Cetak WO"
+                            string="Cetak WO / SPK"
                             icon="fa-cog">
 <!--                        <field string="Cetak WO" name="so_count" widget="statinfo"/>-->
                     </button>

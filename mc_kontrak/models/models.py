@@ -10,16 +10,33 @@ class mc_kontrak(models.Model):
     name = fields.Char(string='No Kontrak', readonly=True, default='New')
     mc_cust = fields.Many2one('res.partner', string='Customer')
     mc_pic_cust = fields.Char(string='PIC Customer')
-    # start_date = fields.Date(string='Start Date', readonly=True, store=True, default=fields.Datetime.now())
-    # end_date = fields.Date(string='End Date', readonly=False, copy=False)
+    mc_create_date = fields.Date(string='Created Date', readonly=True, store=True, default=fields.Datetime.now())
+    mc_confirm_date = fields.Date(string='Confirm Date', readonly=True, copy=False)
     mc_total = fields.Float(string='Total', readonly=True, compute='total_harga', store=True)
     mc_isopen = fields.Boolean(default=True)
+    mc_sales = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
+
+    mc_state = fields.Selection([
+        ('draft', 'Quotation'),
+        ('done', 'Confirmed'),
+        ('cancel', 'Cancelled'),
+    ], string='Status', readonly=True, copy=False, index=True, tracking=3, default='draft')
 
     so_count = fields.Integer(string='SO', compute='_count_so')
 
     # Relasi
     product_order_line = fields.One2many('mc_kontrak.product_order_line', 'kontrak_id', string='No Kontrak')
     histori_so_line = fields.One2many('mc_kontrak.histori_so', 'x_kontrak_id', string='Histori SO')
+
+    # @api.depends('mc_sales')
+    # def _get_current_logged_in(self):
+    #     user_obj = self.env['res.users'].search([])
+    #     for user_login in user_obj:
+    #         current_login = self.env.user
+    #         print(current_login)
+    #         if user_login == current_login:
+    #             self.mc_sales = current_login
+    #             print(self.mc_sales)
 
     @api.model
     def create(self, vals_list):
@@ -65,6 +82,22 @@ class mc_kontrak(models.Model):
                 'default_kontrak_id': self.id
             }
         }
+
+    def action_confirm(self):
+        query = """
+            UPDATE mc_kontrak_mc_kontrak SET mc_state = 'done' WHERE id = %s
+        """ % self.id
+        self.env.cr.execute(query)
+
+        print('confirm contract')
+
+    def action_cancel(self):
+        query = """
+            UPDATE mc_kontrak_mc_kontrak SET mc_state = 'cancel' WHERE id = %s
+        """ % self.id
+        self.env.cr.execute(query)
+
+        print('cancel contract')
 
     @api.depends('product_order_line')
     def _hitung_qty_belum_terpasang(self):
@@ -305,8 +338,9 @@ class CustomSalesOrder(models.Model):
                             INSERT INTO mc_kontrak_histori_so(x_kontrak_id,
                             x_order_id, x_tgl_start, x_tgl_end, x_item, x_period, x_status_pembayaran,
                             x_note) VALUES ('%s','%s','%s','%s','%s','%s','%s','')
-                        """ % (self.kontrak_id.id, row.order_id.id, self.x_start_date, self.validity_date,row.product_id.id,
-                               periode, self.state)
+                        """ % (
+                    self.kontrak_id.id, row.order_id.id, self.x_start_date, self.validity_date, row.product_id.id,
+                    periode, self.state)
                 self.env.cr.execute(query)
 
                 if query:
@@ -332,6 +366,10 @@ class CustomSalesOrder(models.Model):
 
             res = super(CustomSalesOrder, self).action_confirm()
             return res
+
+    def action_report_wo_spk(self):
+        print('halo')
+        print(self.id)
 
 
 class CustomSalesOrderLine(models.Model):
