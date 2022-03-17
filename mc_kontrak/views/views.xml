@@ -41,7 +41,7 @@
                                 string="Cancel Contract" class="btn-secondary" type="object"
                                 attrs="{'invisible': [('mc_state', 'not in', ['draft'])]}"/>
 
-                        <field name="mc_state" widget="statusbar" statusbar_visible="draft,done"/>
+                        <field name="mc_state" widget="statusbar" statusbar_visible="draft,done,cancel"/>
                     </header>
                     <sheet>
                         <div class="oe_button_box" name="button_box">
@@ -87,13 +87,22 @@
                                             <field name="mc_qty_terpasang" readonly="1"/>
                                             <field name="mc_harga_produk"/>
                                             <field name="mc_harga_diskon"/>
+                                            <field name="tax_id" domain="[('type_tax_use', '=', 'sale')]"/>
                                             <field name="mc_period"/>
                                             <field name="mc_period_info"/>
                                             <field name="mc_payment" widget="Monetary"/>
                                         </tree>
                                     </field>
-                                    <group colspan="2" name="contract_total">
-                                        <field name="mc_total"/>
+                                    <group name="note_group" class="mt-2 mt-md-0 e_subtotal_footer oe_right">
+
+                                        <group class="oe_subtotal_footer oe_right" name="contract_total">
+                                            <field name="mc_tak_pajak" widget="Monetary" string="Amount Untaxed"/>
+                                            <field name="mc_pajak" widget="Monetary"
+                                                   attrs="{'invisible': [('mc_pajak', '=', '0')]}"
+                                                   string="Amount Taxed"/>
+                                            <field name="mc_total" widget="Monetary"/>
+                                        </group>
+                                        <div class="oe_clear"/>
                                     </group>
                                 </group>
                             </page>
@@ -103,6 +112,7 @@
                                         <tree>
                                             <field name="x_tgl_start" string="Tanggal Start"/>
                                             <field name="x_tgl_end" string="Tanggal End"/>
+                                            <field name="x_order_id" string="Nomor SO"/>
                                             <field name="x_item" string="Item"/>
                                             <field name="x_period" string="Period"/>
                                             <field name="x_note" string="Note"/>

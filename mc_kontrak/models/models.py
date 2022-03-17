@@ -12,7 +12,9 @@ class mc_kontrak(models.Model):
     mc_pic_cust = fields.Char(string='PIC Customer')
     mc_create_date = fields.Date(string='Created Date', readonly=True, store=True, default=fields.Datetime.now())
     mc_confirm_date = fields.Date(string='Confirm Date', readonly=True, copy=False)
-    mc_total = fields.Float(string='Total', readonly=True, compute='total_harga', store=True)
+    mc_total = fields.Monetary(string='Total', readonly=True, compute='total_harga', store=True)
+    mc_pajak = fields.Monetary(string='Total Pajak', readonly=True, store=True)
+    mc_tak_pajak = fields.Monetary(string='Total Tak Pajak', readonly=True, store=True)
     mc_isopen = fields.Boolean(default=True)
     mc_sales = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
 
@@ -27,16 +29,7 @@ class mc_kontrak(models.Model):
     # Relasi
     product_order_line = fields.One2many('mc_kontrak.product_order_line', 'kontrak_id', string='No Kontrak')
     histori_so_line = fields.One2many('mc_kontrak.histori_so', 'x_kontrak_id', string='Histori SO')
-
-    # @api.depends('mc_sales')
-    # def _get_current_logged_in(self):
-    #     user_obj = self.env['res.users'].search([])
-    #     for user_login in user_obj:
-    #         current_login = self.env.user
-    #         print(current_login)
-    #         if user_login == current_login:
-    #             self.mc_sales = current_login
-    #             print(self.mc_sales)
+    currency_id = fields.Many2one('res.currency', default=12)
 
     @api.model
     def create(self, vals_list):
@@ -47,10 +40,19 @@ class mc_kontrak(models.Model):
     @api.depends('product_order_line')
     def total_harga(self):
         total = 0.00
+        pajak = 0.00
+        i = 0
         for rec in self.product_order_line:
+            i += 1
+            print(i)
+            print(rec.mc_pajak)
             total += rec.mc_payment
+            pajak += rec.mc_pajak
 
+        print('pajak', pajak)
         self.mc_total = total
+        self.mc_pajak = pajak
+        self.mc_tak_pajak = total - pajak
 
     # Hitung berapa SO di Kontrak ini
     def _count_so(self):
@@ -119,14 +121,24 @@ class ProductOrderLine(models.Model):
     # Relasi
     kontrak_id = fields.Many2one('mc_kontrak.mc_kontrak', string='No Kontrak', required=True, ondelete='cascade')
     product_id = fields.Many2one('product.product', string='Product')
+    product_template_id = fields.Many2one(
+        'product.template', string='Product Template',
+        related="product_id.product_tmpl_id", domain=[('sale_ok', '=', True)])
+
     currency_id = fields.Many2one('res.currency')
+    tax_id = fields.Many2one('account.tax', string='Taxes')
 
     # Field
-    mc_qty_kontrak = fields.Integer(string='Quantity Kontrak')
-    mc_qty_terpasang = fields.Integer(string='Quantity Terpasang', default=0)
-    mc_qty_belum_terpasang = fields.Integer(string='Quantity Belum Terpasang')
-    mc_harga_produk = fields.Monetary(string='Standard Price')
+    mc_qty_kontrak = fields.Integer(string='QTY Kontrak')
+    mc_qty_so = fields.Integer(string='QTY SO')
+    mc_qty_terpasang = fields.Integer(string='QTY Terpasang', default=0)
+    mc_qty_belum_terpasang = fields.Integer(string='QTY Belum Terpasang')
+
+    mc_harga_produk = fields.Float(string='Standard Price', related='product_template_id.list_price', store=True)
     mc_harga_diskon = fields.Monetary(string='Discounted Price')
+    mc_pajak = fields.Float(string='Pajak', compute='_hitung_subtotal', store=True, readonly=True)
+    mc_harga_tak_pajak = fields.Monetary(string='Harga Tak Pajak', store=True, readonly=True)
+
     mc_period = fields.Integer(string='Period')
     mc_period_info = fields.Selection([
         ('bulan', 'Bulan'),
@@ -138,34 +150,46 @@ class ProductOrderLine(models.Model):
     mc_isopen = fields.Boolean(default=True)
     mc_unit_price = fields.Monetary(string='Unit Price')
 
-    # @api.depends('mc_qty_kontrak')
-    # def _hitung_qty_blm_terpasang(self):
-    #     self.mc_qty_belum_terpasang = self.mc_qty_kontrak
-
-    @api.depends('mc_qty_kontrak', 'mc_harga_produk', 'mc_harga_diskon', 'mc_period', 'mc_period_info')
+    @api.depends('mc_qty_kontrak', 'mc_harga_diskon', 'mc_period', 'mc_period_info', 'tax_id')
     def _hitung_subtotal(self):
         subtotal = 0
         grandtotal = 0
+        pajakTotalProduk = 0
+        totalTakPajak = 0
 
         for line in self:
             price = 0
             unitPrice = 0
+            pajakTotal = pajakUnit = takPajak = 0
             if line.mc_period_info == 'tahun':
-                price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period * 12
-                unitPrice = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_period * 12
+                price = line.mc_harga_diskon * line.mc_qty_kontrak * line.mc_period * 12
+                unitPrice = line.mc_harga_diskon * line.mc_period * 12
+                if line.tax_id:
+                    if line.tax_id.amount != 0:
+                        takPajak = price
+                        pajakTotal = price / (line.tax_id.amount * 100)
+                        pajakUnit = unitPrice / (line.tax_id.amount * 100)
             else:
-                price = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_qty_kontrak * line.mc_period
-                unitPrice = (line.mc_harga_produk - line.mc_harga_diskon) * line.mc_period
+                price = line.mc_harga_diskon * line.mc_qty_kontrak * line.mc_period
+                unitPrice = line.mc_harga_diskon * line.mc_period
+                if line.tax_id:
+                    if line.tax_id.amount != 0:
+                        takPajak = price
+                        pajakTotal = price / (line.tax_id.amount * 100)
+                        pajakUnit = unitPrice / (line.tax_id.amount * 100)
 
             subtotal += price
+            pajakTotalProduk += pajakTotal
+            totalTakPajak += takPajak
             line.update({
-                'mc_payment': price,
-                'mc_unit_price': unitPrice,
+                'mc_payment': price + pajakTotal,
+                'mc_unit_price': unitPrice + pajakUnit,
                 'mc_qty_belum_terpasang': line.mc_qty_kontrak
             })
 
         grandtotal = subtotal
         self.mc_total = grandtotal
+        self.mc_pajak = pajakTotalProduk
 
     @api.model
     def view_init(self, fields_list):
@@ -382,8 +406,8 @@ class CustomSalesOrderLine(models.Model):
     kontrak_line_id = fields.Many2one('mc_kontrak.product_order_line')
 
     # Field
-    x_mc_qty_kontrak = fields.Integer(string='Quantity Kontrak')
-    x_mc_qty_terpasang = fields.Integer(string='Quantity Terpasang')
+    x_mc_qty_kontrak = fields.Integer(string='QTY Kontrak')
+    x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang')
     x_mc_harga_produk = fields.Monetary(string='Standard Price')
     x_mc_harga_diskon = fields.Monetary()
     x_mc_isopen = fields.Boolean()
