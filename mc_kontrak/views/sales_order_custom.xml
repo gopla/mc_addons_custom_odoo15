@@ -10,26 +10,49 @@
                             name="action_report_wo_spk"
                             type="object"
                             class="oe_stat_button"
-                            string="Cetak WO / SPK"
+                            string="Cetak WO"
+                            attrs="{'invisible': [('state', '!=', 'sale')]}"
                             icon="fa-cog">
-<!--                        <field string="Cetak WO" name="so_count" widget="statinfo"/>-->
+                    </button>
+<!--                    <button-->
+<!--                            name="action_attachment"-->
+<!--                            type="object"-->
+<!--                            class="oe_stat_button"-->
+<!--                            string="Kirim SO"-->
+<!--                            icon="fa-paper-plane">-->
+<!--                    </button>-->
+                    <button
+                            name="action_view_wo_button"
+                            type="object"
+                            class="oe_stat_button"
+                            icon="fa-list-alt">
+                        <field string="WO" name="wo_count" widget="statinfo"/>
                     </button>
                 </div>
-                <field name="partner_id" position="after">
-                    <field name="kontrak_id" domain="[('mc_cust','=', partner_id), ('mc_isopen','=','true')]"/>
-                </field>
-                <field name="kontrak_id" position="after">
-                    <button name="insert_kontrak"
-                            type="object"
-                            string="Insert Kontrak"/>
-                </field>
-                <field name="validity_date" position="before">
-                    <field name="x_start_date"/>
-                </field>
+                <!--                <field name="partner_id" position="after">-->
+                <!--                    <field name="kontrak_id" domain="[('mc_cust','=', partner_id), ('mc_isopen','=','true')]"/>-->
+                <!--                </field>-->
+                <!--                <field name="kontrak_id" position="after">-->
+                <!--                    <button name="insert_kontrak"-->
+                <!--                            type="object"-->
+                <!--                            string="Insert Kontrak"/>-->
+                <!--                </field>-->
+                <!--                <field name="validity_date" position="before">-->
+                <!--                    <field name="x_start_date"/>-->
+                <!--                </field>-->
                 <!-- Readonly column -->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='product_id']"
                        position="attributes">
                     <attribute name="readonly">True</attribute>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='price_unit']"
+                       position="attributes">
+                    <attribute name="readonly">True</attribute>
+                </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='discount']"
+                       position="attributes">
+                    <!--                    <attribute name="readonly">True</attribute>-->
+                    <attribute name="invisible">False</attribute>
                 </xpath>
 
                 <!-- Hidden some column in SO Line -->
@@ -37,17 +60,21 @@
                        position="attributes">
                     <attribute name="invisible">True</attribute>
                 </xpath>
+                <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='qty_invoiced']"
+                       position="attributes">
+                    <attribute name="invisible">True</attribute>
+                </xpath>
                 <!-- End of hidden -->
-<!--                Rename Column-->
+                <!--                Rename Column-->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='qty_delivered']"
                        position="attributes">
                     <attribute name="string">QTY Terpasang</attribute>
                 </xpath>
-<!--                -->
+                <!--                -->
                 <xpath expr="/form/sheet/notebook/page/field[@name='order_line']/tree/field[@name='name']"
                        position="after">
                     <field name="x_mc_qty_kontrak" readonly="1"></field>
-<!--                    <field name="x_mc_qty_terpasang"></field>-->
+                    <!--                    <field name="x_mc_qty_terpasang"></field>-->
                 </xpath>
             </field>
         </record>

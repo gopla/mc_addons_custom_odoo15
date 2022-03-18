@@ -87,7 +87,8 @@ class mc_kontrak(models.Model):
 
     def action_confirm(self):
         query = """
-            UPDATE mc_kontrak_mc_kontrak SET mc_state = 'done' WHERE id = %s
+            UPDATE mc_kontrak_mc_kontrak SET mc_state = 'done', mc_confirm_date = now()
+            WHERE id = %s
         """ % self.id
         self.env.cr.execute(query)
 
@@ -204,6 +205,16 @@ class CustomSalesOrder(models.Model):
     kontrak_id = fields.Many2one('mc_kontrak.mc_kontrak', string='No Kontrak', required=True, ondelete='cascade')
     kontrak_product_line = fields.Many2one('mc_kontrak.product_order_line')
 
+    wo_count = fields.Integer(string='WO', compute='_count_wo')
+
+    state = fields.Selection([
+        ('draft', 'Quotation'),
+        ('sent', 'Terima DP'),
+        ('sale', 'Progress'),
+        ('done', 'Done'),
+        ('cancel', 'Cancelled'),
+    ], string='Status', readonly=True, copy=False, index=True, tracking=3, default='draft')
+
     x_order_line = fields.One2many('sale.order.line', 'order_id')
     x_mc_qty_kontrak = fields.Integer(string='Quantity Kontrak')
     # x_mc_qty_terpasang = fields.Integer(string='Quantity Terpasang')
@@ -213,8 +224,8 @@ class CustomSalesOrder(models.Model):
 
     def write(self, vals):
         print('method write diakses')
+        res = super(CustomSalesOrder, self).write(vals)
         if ('order_line' in vals):
-            res = super(CustomSalesOrder, self).write(vals)
             arr_order_line = vals['order_line']
             print(arr_order_line)
             # so_line = self.x_order_line
@@ -258,7 +269,7 @@ class CustomSalesOrder(models.Model):
             #     """ % (self.kontrak_id.id, self.kontrak_id.id)
             #     print(query)
             #     self.env.cr.execute(query)
-            return res
+        return res
 
     # Auto fill Order Line
     def insert_kontrak(self):
@@ -277,11 +288,10 @@ class CustomSalesOrder(models.Model):
                     values['product_id'] = row.product_id.id
                     values['kontrak_line_id'] = row.id
                     values['x_mc_qty_kontrak'] = row.mc_qty_kontrak
-                    values['qty_delivered'] = row.mc_qty_belum_terpasang
                     values['kontrak_id'] = kontrak_id.id
-                    values['price_unit'] = row.mc_unit_price
+                    values['price_unit'] = row.mc_harga_diskon
+                    values['discount'] = (row.mc_harga_produk - row.mc_harga_diskon) / row.mc_harga_produk
                     values['x_mc_isopen'] = row.mc_isopen
-                    values['discount'] = row.mc_harga_diskon
                     values['product_uom_qty'] = row.mc_qty_belum_terpasang
 
                     terms.append((0, 0, values))
@@ -391,14 +401,41 @@ class CustomSalesOrder(models.Model):
             res = super(CustomSalesOrder, self).action_confirm()
             return res
 
+    # Button untuk membuat WO baru dari SO
     def action_report_wo_spk(self):
-        print('halo')
-        print(self.id)
+        for row in self:
+            partner_id = row.kontrak_id.mc_cust.id
+
+        return {
+            'type': 'ir.actions.act_window',
+            'view_type': 'form',
+            'view_mode': 'form',
+            'res_model': 'mc_kontrak.work_order',
+            'context': {
+                'default_partner_id': partner_id,
+                'default_kontrak_id': row.kontrak_id.id,
+                'default_order_id': self.id
+            }
+        }
+
+    # Button untuk membuka related WO
+    def action_view_wo_button(self):
+        action = self.env.ref('mc_kontrak.work_order_course_action').read()[0]
+        action['domain'] = [('order_id', '=', self.id)]
+        action['context'] = {}
+        return action
+
+    # Hitung berapa SO di Kontrak ini
+    def _count_wo(self):
+        query = "SELECT COUNT(0) FROM public.mc_kontrak_work_order where order_id = %s " % self.id
+        print(query)
+        self.env.cr.execute(query)
+        result = self.env.cr.fetchone()
+        self.wo_count = result[0]
 
 
 class CustomSalesOrderLine(models.Model):
     _inherit = 'sale.order.line'
-    _name = 'sale.order.line'
 
     product_id = fields.Many2one('product.product', readonly=True)
     order_id = fields.Many2one('sale.order', required=True, Store=True, Index=True)
@@ -407,11 +444,12 @@ class CustomSalesOrderLine(models.Model):
 
     # Field
     x_mc_qty_kontrak = fields.Integer(string='QTY Kontrak')
-    x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang')
+    x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang', readonly=True, store=True)
     x_mc_harga_produk = fields.Monetary(string='Standard Price')
     x_mc_harga_diskon = fields.Monetary()
     x_mc_isopen = fields.Boolean()
-    price_subtotal = fields.Monetary(compute='_hitung_subtotal_so')
+
+    # price_subtotal = fields.Monetary(compute='_hitung_subtotal_so')
 
     # Total Harga
     @api.depends('x_mc_harga_produk', 'x_mc_harga_diskon', 'x_mc_qty_terpasang')
@@ -419,8 +457,95 @@ class CustomSalesOrderLine(models.Model):
         subtotal = 0
 
         for line in self:
-            price = (line.x_mc_harga_produk - line.x_mc_harga_diskon) * line.x_mc_qty_terpasang
+            price = line.x_mc_harga_diskon * line.x_mc_qty_terpasang
+            print('price in row ', price)
             subtotal += price
             line.update({
                 'price_subtotal': price
             })
+
+
+class WorkOrder(models.Model):
+    _name = 'mc_kontrak.work_order'
+    _inherit = 'sale.order'
+
+    # Field
+    name = fields.Char(string='No WO', readonly=True, default='New')
+    x_teknisi_1 = fields.Char(string='Teknisi 1')
+    x_teknisi_2 = fields.Char(string='Teknisi 2')
+    x_created_date = fields.Date(default=fields.Datetime.now(), string='Created Date')
+    x_sales = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
+    x_isopen = fields.Boolean(default=True)
+
+    # Relasi
+    kontrak_id = fields.Many2one('mc_kontrak.mc_kontrak')
+    order_id = fields.Many2one('sale.order')
+    company_id = fields.Many2one('res.company', 'Company', required=True, index=True,
+                                 default=lambda self: self.env.company)
+    partner_id = fields.Many2one('res.partner', related='kontrak_id.mc_cust')
+    product_id = fields.Many2one('product.product')
+    work_order_line = fields.One2many('mc_kontrak.work_order_line', 'work_order_id')
+
+    # Relasi sari sale.order
+    transaction_ids = fields.Many2many('payment.transaction', 'work_order_transaction_rel', 'id',
+                                       'transaction_id',
+                                       string='Transactions', copy=False, readonly=True)
+    tag_ids = fields.Many2many('crm.tag', 'work_order_tag_rel', 'id', 'tag_id', string='Tags')
+
+    state = fields.Selection([
+        ('draft', 'Draft'),
+        ('sent', 'Sent'),
+        ('done', 'Done'),
+        ('cancel', 'Cancelled'),
+    ], string='Status', copy=False, index=True, tracking=3, default='draft')
+
+    @api.model
+    def create(self, vals_list):
+        vals_list['name'] = self.env['ir.sequence'].next_by_code('mc_kontrak.work_order')
+        return super(WorkOrder, self).create(vals_list)
+
+    # Auto fill Order Line
+    def insert_so_line(self):
+        print('insert SO line func')
+        kontrak_id = self.kontrak_id.id
+        order_id = self.order_id.id
+        terms = []
+        print(order_id)
+        so_line = self.env['sale.order'].search([('id', '=', order_id)])
+        print(so_line)
+        if so_line:
+            for row in so_line.order_line:
+                values = {}
+                print(row)
+
+                # Cek jika status produk open, masukkan ke SO
+                values['product_id'] = row.product_id.id
+                values['order_id'] = row.id
+                values['product_uom_qty'] = row.product_uom_qty
+                values['x_mc_qty_terpasang'] = row.product_uom_qty
+                values['x_end_date'] = row.order_id.validity_date
+
+                terms.append((0, 0, values))
+
+        return self.update({'work_order_line': terms})
+
+
+class WorkOrderLine(models.Model):
+    _name = 'mc_kontrak.work_order_line'
+    _inherit = 'sale.order.line'
+
+    # Relasi
+    order_id = fields.Many2one('sale.order', required=True, Store=True, Index=True)
+    product_id = fields.Many2one('product.product', readonly=True, store=True)
+    invoice_lines = fields.Many2many('account.move.line', 'work_order_line_invoice_rel', 'order_line_id',
+                                     'invoice_line_id', string='Invoice Lines', copy=False)
+    work_order_id = fields.Many2one('mc_kontrak.work_order')
+
+    # Field
+    x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang')
+    x_start_date = fields.Date()
+    x_end_date = fields.Date()
+
+
+
+

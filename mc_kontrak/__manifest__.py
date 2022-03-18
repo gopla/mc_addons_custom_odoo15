@@ -29,6 +29,7 @@
         'views/templates.xml',
         'views/sequence_data.xml',
         'views/sales_order_custom.xml',
+        'views/work_order_view.xml',
         'report/kontrak_report.xml',
         'report/kontrak_template.xml',
     ],

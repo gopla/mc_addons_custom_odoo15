@@ -11,11 +11,20 @@
             <field name="company_id" eval="False"/>
         </record>
 
-        <!--        Sequence for sale.order-->
+        <!-- Sequence for sale.order-->
         <record id="seq_sale_order" model="ir.sequence">
             <field name="name">Sales Order</field>
             <field name="code">sale.order</field>
             <field name="prefix">SO-%(day)s%(month)s%(year)s-</field>
+            <field name="padding">5</field>
+            <field name="company_id" eval="False"/>
+        </record>
+
+        <!-- Sequence for mc_kontrak.work_order-->
+        <record id="seq_work_order" model="ir.sequence">
+            <field name="name">Work Order</field>
+            <field name="code">mc_kontrak.work_order</field>
+            <field name="prefix">WO-%(day)s%(month)s%(year)s-</field>
             <field name="padding">5</field>
             <field name="company_id" eval="False"/>
         </record>

@@ -1,0 +1,94 @@
+<odoo>
+    <data>
+        <!--Tree-->
+        <record model="ir.ui.view" id="work_order_tree_view">
+            <field name="name">mc_kontrak.work_order.tree</field>
+            <field name="model">mc_kontrak.work_order</field>
+            <field name="arch" type="xml">
+                <tree default_order="create_date desc">
+                    <field name="name"/>
+                    <field name="partner_invoice_id" string="Customer"/>
+                    <field name="x_created_date" string="Start Date"/>
+                    <field name="x_created_date" string="Start Date"/>
+                    <field name="state" string="Status" decoration-success="state == 'sale' or state == 'done'"
+                           decoration-info="state == 'draft' or state == 'sent'" widget="badge" optional="show"/>
+                </tree>
+            </field>
+        </record>
+
+        <!--Act-->
+        <record id="work_order_course_action" model="ir.actions.act_window">
+            <field name="name">Installation Work Order</field>
+            <field name="res_model">mc_kontrak.work_order</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+                <p name="o_view_nocontent_smiling_face">
+                    Buat Work Order Baru
+                </p>
+            </field>
+        </record>
+
+        <!--Form-->
+        <record id="work_order_view_form" model="ir.ui.view">
+            <field name="name">mc_kontrak.work_order.form</field>
+            <field name="model">mc_kontrak.work_order</field>
+            <field name="arch" type="xml">
+                <form string="Form work_order">
+                    <header>
+                        <button name="action_confirm" id="action_confirm" data-hotkey="v"
+                                string="Confirm WO" class="btn-primary" type="object"
+                                attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+                        <button name="action_cancel" id="action_confirm" data-hotkey="v"
+                                string="Cancel WO" class="btn-secondary" type="object"
+                                attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
+
+                        <field name="state" widget="statusbar" statusbar_visible="draft,done,cancel"/>
+                    </header>
+                    <sheet>
+                        <div class="oe_title">
+                            <span style="font-size: 25px; font-weight: bold;">
+                                <field name="name" readonly="1"/>
+                            </span>
+                        </div>
+
+                        <group>
+                            <group>
+                                <field name="company_id" invisible="1"/>
+                                <field name="partner_id"/>
+                                <field name="kontrak_id"/>
+                                <field name="order_id"/>
+                                <button
+                                        name="insert_so_line"
+                                        string="Insert SO"
+                                        type="object"
+                                />
+                            </group>
+                            <group>
+                                <field name="x_created_date"/>
+                                <field name="x_teknisi_1"/>
+                                <field name="x_teknisi_2"/>
+                                <field name="x_sales"/>
+                            </group>
+                        </group>
+                        <notebook>
+                            <page string="Ordered Item">
+                                <field name="work_order_line" mode="tree,kanban" nolabel="1">
+                                    <tree editable="bottom" create="1">
+                                        <field name="name" readonly="1"/>
+                                        <field name="product_uom_qty" string="QTY SO" readonly="1"/>
+                                        <field name="x_mc_qty_terpasang" string="QTY Terpasang" readonly="0"/>
+                                        <field name="x_start_date" string="Start Date"/>
+                                        <field name="x_end_date" string="End Date" readonly="1"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <menuitem id="work_order" name="Installation Work Order" parent="sale.sale_order_menu"
+                  sequence="2" action="work_order_course_action" groups="base.group_user"/>
+    </data>
+</odoo>
