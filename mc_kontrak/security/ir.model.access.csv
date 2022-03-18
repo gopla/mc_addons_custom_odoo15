@@ -1,2 +1,6 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_mc_kontrak_mc_kontrak,mc_kontrak.mc_kontrak,model_mc_kontrak_mc_kontrak,base.group_user,1,1,1,1
+access_mc_kontrak_product_order_line,mc_kontrak.product_order_line,model_mc_kontrak_product_order_line,base.group_user,1,1,1,1
+access_mc_kontrak_histori_so,mc_kontrak.histori_so,model_mc_kontrak_histori_so,base.group_user,1,1,1,1
+access_mc_kontrak_work_order,mc_kontrak.work_order,model_mc_kontrak_work_order,base.group_user,1,1,1,1
+access_mc_kontrak_work_order_line,mc_kontrak.work_order_line,model_mc_kontrak_work_order_line,base.group_user,1,1,1,1
