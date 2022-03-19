@@ -443,11 +443,11 @@ class CustomSalesOrderLine(models.Model):
     kontrak_line_id = fields.Many2one('mc_kontrak.product_order_line')
 
     # Field
-    x_mc_qty_kontrak = fields.Integer(string='QTY Kontrak')
+    x_mc_qty_kontrak = fields.Integer(string='QTY Kontrak', store=True)
     x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang', readonly=True, store=True)
     x_mc_harga_produk = fields.Monetary(string='Standard Price')
     x_mc_harga_diskon = fields.Monetary()
-    x_mc_isopen = fields.Boolean()
+    x_mc_isopen = fields.Boolean(default=True, store=True)
 
     # price_subtotal = fields.Monetary(compute='_hitung_subtotal_so')
 
@@ -475,11 +475,11 @@ class WorkOrder(models.Model):
     x_teknisi_2 = fields.Char(string='Teknisi 2')
     x_created_date = fields.Date(default=fields.Datetime.now(), string='Created Date')
     x_sales = fields.Many2one('res.users', string='Salesperson', default=lambda self: self.env.user)
-    x_isopen = fields.Boolean(default=True)
+    x_isopen = fields.Boolean(default=True, store=True)
 
     # Relasi
     kontrak_id = fields.Many2one('mc_kontrak.mc_kontrak')
-    order_id = fields.Many2one('sale.order')
+    order_id = fields.Many2one('sale.order', store=True)
     company_id = fields.Many2one('res.company', 'Company', required=True, index=True,
                                  default=lambda self: self.env.company)
     partner_id = fields.Many2one('res.partner', related='kontrak_id.mc_cust')
@@ -516,18 +516,122 @@ class WorkOrder(models.Model):
         if so_line:
             for row in so_line.order_line:
                 values = {}
-                print(row)
+                print(row.id)
 
                 # Cek jika status produk open, masukkan ke SO
                 values['product_id'] = row.product_id.id
-                values['order_id'] = row.id
+                values['order_id'] = row.order_id.id
                 values['product_uom_qty'] = row.product_uom_qty
-                values['x_mc_qty_terpasang'] = row.product_uom_qty
+                values['qty_delivered'] = row.product_uom_qty
                 values['x_end_date'] = row.order_id.validity_date
+                values['sale_order_line_id'] = row.id
 
                 terms.append((0, 0, values))
 
         return self.update({'work_order_line': terms})
+
+    def action_cancel(self):
+        print('test cancel work order')
+        query = """
+            SELECT qty_delivered, kontrak_line_id  FROM mc_kontrak_work_order_line wol 
+            WHERE wol.order_id  = %s
+        """ % (self.id)
+
+        self.env.cr.execute(query)
+        arrQuery = self.env.cr.dictfetchall()
+
+        if arrQuery:
+            query = """
+                update sale_order set x_mc_isopen = true where id = %s
+            """ % self.kontrak_id.id
+            self.env.cr.execute(query)
+            for row in arrQuery:
+                query = """
+                    update sale_order_line set
+                    qty_delivered = qty_delivered - %s,
+                    where id = %s 
+                """ % (row['qty_delivered'], row['sale_order_line_id'])
+                self.env.cr.execute(query)
+
+        query = """
+                UPDATE mc_kontrak_work_order SET state = 'cancel' WHERE id = %s 
+        """ % self.id
+        self.env.cr.execute(query)
+
+        res = super(WorkOrder, self).action_cancel()
+        return res
+
+    def action_confirm(self):
+        print('action confirm tes work order')
+        print(self.id)
+        print(self.work_order_line)
+        wo_line = self.work_order_line
+        if wo_line:
+            i = 0
+            for row in wo_line:
+                # if arr_order_line[i][2]['product_uom_qty']:
+                # x_qty_terpasang = arr_order_line[i][2]['product_uom_qty']
+
+                qty_wo = row.qty_delivered
+                print('QTY WO Terpasang = ', qty_wo)
+
+                query = "SELECT coalesce(SUM(wol.qty_delivered), 0) FROM mc_kontrak_work_order wo " \
+                        "JOIN mc_kontrak_work_order_line wol " \
+                        "ON wol.work_order_id = wo.id " \
+                        "WHERE wo.state NOT IN('cancel') AND " \
+                        "wol.work_order_id = %s AND " \
+                        "wol.id != %s" % (row.work_order_id.id, row.id)
+                self.env.cr.execute(query)
+                x_qty_terpasang2 = self.env.cr.fetchone()[0]
+                total_terpasang = qty_wo + x_qty_terpasang2
+
+                query = "UPDATE sale_order_line SET qty_delivered = %s, " \
+                        "x_mc_qty_terpasang = %s " \
+                        "WHERE id = %s" % (total_terpasang, total_terpasang, row.sale_order_line_id.id)
+                self.env.cr.execute(query)
+
+                # Insert into Histori
+                # query = """
+                #     SELECT mc_period, mc_period_info FROM mc_kontrak_product_order_line
+                #     WHERE kontrak_id = %s
+                # """ % self.kontrak_id.id
+                #
+                # self.env.cr.execute(query)
+                # getPeriod = self.env.cr.dictfetchone()
+                # periode = str(getPeriod['mc_period']) + " " + str(getPeriod['mc_period_info'])
+                #
+                # query = """
+                #             INSERT INTO mc_kontrak_histori_so(x_kontrak_id,
+                #             x_order_id, x_tgl_start, x_tgl_end, x_item, x_period, x_status_pembayaran,
+                #             x_note) VALUES ('%s','%s','%s','%s','%s','%s','%s','')
+                #         """ % (
+                #     self.kontrak_id.id, row.order_id.id, self.x_start_date, self.validity_date, row.product_id.id,
+                #     periode, self.state)
+                # self.env.cr.execute(query)
+
+                if query:
+                    print('oke, qty dikurangi')
+                i = i + 1
+            query = """
+                            update sale_order set
+                            x_mc_isopen = False
+                            where id = %s
+                            and x_mc_qty_kontrak = (
+                                select SUM(sol.qty_delivered) as terpasang
+                                from sale_order so
+                                join sale_order_line sol on sol.order_id = so.id
+                                where so.id = %s
+                            )
+                        """ % (self.order_id.id, self.order_id.id)
+            self.env.cr.execute(query)
+
+            query = """
+                            UPDATE mc_kontrak_work_order SET state = 'sale' WHERE id = %s
+                    """ % self.id
+            self.env.cr.execute(query)
+
+            res = super(WorkOrder, self).action_confirm()
+            return res
 
 
 class WorkOrderLine(models.Model):
@@ -539,10 +643,11 @@ class WorkOrderLine(models.Model):
     product_id = fields.Many2one('product.product', readonly=True, store=True)
     invoice_lines = fields.Many2many('account.move.line', 'work_order_line_invoice_rel', 'order_line_id',
                                      'invoice_line_id', string='Invoice Lines', copy=False)
-    work_order_id = fields.Many2one('mc_kontrak.work_order')
+    work_order_id = fields.Many2one('mc_kontrak.work_order', readonly=True, store=True)
+    sale_order_line_id = fields.Many2one('sale.order.line', store=True)
 
     # Field
-    x_mc_qty_terpasang = fields.Integer(string='QTY Terpasang')
+    qty_delivered = fields.Integer(string='QTY Terpasang')
     x_start_date = fields.Date()
     x_end_date = fields.Date()
 

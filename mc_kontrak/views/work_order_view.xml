@@ -76,7 +76,7 @@
                                     <tree editable="bottom" create="1">
                                         <field name="name" readonly="1"/>
                                         <field name="product_uom_qty" string="QTY SO" readonly="1"/>
-                                        <field name="x_mc_qty_terpasang" string="QTY Terpasang" readonly="0"/>
+                                        <field name="qty_delivered" string="QTY Terpasang" readonly="0"/>
                                         <field name="x_start_date" string="Start Date"/>
                                         <field name="x_end_date" string="End Date" readonly="1"/>
                                     </tree>
