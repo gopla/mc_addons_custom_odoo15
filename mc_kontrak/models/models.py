@@ -293,6 +293,7 @@ class CustomSalesOrder(models.Model):
                     values['discount'] = (row.mc_harga_produk - row.mc_harga_diskon) / row.mc_harga_produk
                     values['x_mc_isopen'] = row.mc_isopen
                     values['product_uom_qty'] = row.mc_qty_belum_terpasang
+                    values['discount'] = 0
 
                     terms.append((0, 0, values))
 
@@ -482,9 +483,9 @@ class WorkOrder(models.Model):
     order_id = fields.Many2one('sale.order', store=True)
     company_id = fields.Many2one('res.company', 'Company', required=True, index=True,
                                  default=lambda self: self.env.company)
-    partner_id = fields.Many2one('res.partner', related='kontrak_id.mc_cust')
+    partner_id = fields.Many2one('res.partner', related='kontrak_id.mc_cust', store=True)
     product_id = fields.Many2one('product.product')
-    work_order_line = fields.One2many('mc_kontrak.work_order_line', 'work_order_id')
+    work_order_line = fields.One2many('mc_kontrak.work_order_line', 'work_order_id', store=True)
 
     # Relasi sari sale.order
     transaction_ids = fields.Many2many('payment.transaction', 'work_order_transaction_rel', 'id',

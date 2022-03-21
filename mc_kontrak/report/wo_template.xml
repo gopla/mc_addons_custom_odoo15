@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_wo_document">
+        <t t-call="web.external_layout">
+            <t t-set="doc" t-value="doc.with_context(lang=doc.partner_invoice_id.lang)"/>
+
+            <center>
+                <h2>Installation Work Order</h2>
+            </center>
+
+            <table style="width:100%;">
+                <tr>
+                    <td style="max-width:30%">Customer Name</td>
+                    <td>:</td>
+                    <td>
+                        <span t-field="doc.partner_id.name"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Date / Time</td>
+                    <td>:</td>
+                    <td>Date: <span t-field="doc.x_created_date"></span> Start: <span
+                            t-field="doc.x_created_date"></span>  Finish:
+                        <span t-field="doc.order_id.validity_date"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Work Order No</td>
+                    <td>:</td>
+                    <td>
+                        <span t-field="doc.name"></span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Address</td>
+                    <td>:</td>
+                    <td>
+                        <span
+                                t-field="doc.partner_id.street"></span>
+                        <span t-field="doc.partner_id.street2"></span>
+                        <span t-field="doc.partner_id.city"></span>
+                    </td>
+                </tr>
+            </table>
+            <br/>
+
+            <p>1. Installation Part ke Kendaraan</p>
+            <table border="1" style="width:100%;">
+                <tr>
+                    <td>No</td>
+                    <td>Jenis Kendaraan</td>
+                    <td>Nopol</td>
+                    <td>Tahun</td>
+                    <td>IMEI</td>
+                    <td>No Simcard</td>
+                </tr>
+                <t t-foreach="range(doc.work_order_line.qty_delivered)" t-as="i">
+                    <tr>
+                        <td>
+                            <t t-esc="i + 1"/>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                </t>
+            </table>
+
+            <p>2. Instalasi Perangkat VSMS (Hardware)</p>
+            <table style="width:100%; table-layout:fixed;">
+                <tr>
+                    <td>a)</td>
+                    <td>Perangkat VSMS sudah terpasang dengan baik</td>
+                    <td></td>
+                </tr>
+            </table>
+        </t>
+    </template>
+
+
+    <template id="report_wo">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="mc_kontrak.report_wo_document"/>
+            </t>
+        </t>
+    </template>
+
+
+    <!--<template id="report_saleorder_pro_forma">-->
+    <!--    <t t-call="web.html_container">-->
+    <!--        <t t-set="is_pro_forma" t-value="True"/>-->
+    <!--        <t t-foreach="docs" t-as="doc">-->
+    <!--            <t t-call="sale.report_kontrak_document" t-lang="doc.customer_id.lang"/>-->
+    <!--        </t>-->
+    <!--    </t>-->
+    <!--</template>-->
+
+</odoo>

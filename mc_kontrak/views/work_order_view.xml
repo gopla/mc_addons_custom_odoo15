@@ -9,7 +9,6 @@
                     <field name="name"/>
                     <field name="partner_invoice_id" string="Customer"/>
                     <field name="x_created_date" string="Start Date"/>
-                    <field name="x_created_date" string="Start Date"/>
                     <field name="state" string="Status" decoration-success="state == 'sale' or state == 'done'"
                            decoration-info="state == 'draft' or state == 'sent'" widget="badge" optional="show"/>
                 </tree>
@@ -42,7 +41,7 @@
                                 string="Cancel WO" class="btn-secondary" type="object"
                                 attrs="{'invisible': [('state', 'not in', ['draft'])]}"/>
 
-                        <field name="state" widget="statusbar" statusbar_visible="draft,done,cancel"/>
+                        <field name="state" widget="statusbar" statusbar_visible="draft,sale,done,cancel"/>
                     </header>
                     <sheet>
                         <div class="oe_title">

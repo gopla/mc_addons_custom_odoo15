@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="action_report_wo" model="ir.actions.report">
+            <field name="name">Work Order</field>
+            <field name="model">mc_kontrak.work_order</field>
+            <field name="report_type">qweb-pdf</field>
+            <field name="report_name">mc_kontrak.report_wo</field>
+            <field name="report_file">mc_kontrak.report_wo</field>
+            <field name="print_report_name">('Work Order - %s' % (object.name)) or 'Work Order - %s' % (object.name)
+            </field>
+            <field name="binding_model_id" ref="model_mc_kontrak_work_order"/>
+            <field name="binding_type">report</field>
+        </record>
+    </data>
+</odoo>

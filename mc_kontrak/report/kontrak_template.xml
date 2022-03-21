@@ -3,22 +3,25 @@
     <template id="report_kontrak_document">
         <t t-call="web.external_layout">
             <t t-set="doc" t-value="doc.with_context(lang=doc.mc_cust.lang)"/>
-            <h2>PT. Otto Menara Globalindo</h2>
-            <p>PT. Otto Menara Globalindo</p>
-            <p>Jl. Pemuda no. 60-70, Surabaya 60271</p>
-
+            <div style="text-align:right">
+                <h2>PT. Otto Menara Globalindo</h2>
+                <p>PT. Otto Menara Globalindo</p>
+                <p>Jl. Pemuda no. 60-70, Surabaya 60271</p>
+            </div>
             <br/>
 
-            <h2>PERJANJIAN KERJA SAMA</h2>
-            <span>No.</span>
-            <span t-field="doc.name"></span>
+            <center>
+                <h2>PERJANJIAN KERJA SAMA</h2>
+                <span>No.</span>
+                <span t-field="doc.name"></span>
+            </center>
 
             <br/>
 
             <p>
                 Perjanjian kerja sama ini (<b>"Perjanjian"</b>), dibuat dan ditandatangani pada hari ini tanggal
-<!--                <span-->
-<!--                    t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
+                <!--                <span-->
+                <!--                    t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
                 (<b>"Tanggal Efektif"</b>)
                 oleh dan antara:
             </p>
@@ -54,10 +57,12 @@
 
             <br/>
 
-            <p>
-                <b>Pasal 1<br/>RUANG LINGKUP
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 1<br/>RUANG LINGKUP
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -88,23 +93,25 @@
                 </ol>
             </p>
 
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 2<br/>JANGKA WAKTU
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 2<br/>JANGKA WAKTU
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
                     <li>
                         Perjanjian ini berlaku selama 12 (dua belas) bulan terhitung sejak tanggal
-<!--                        <span-->
-<!--                                t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
+                        <!--                        <span-->
+                        <!--                                t-field="doc.start_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
                         sampai
                         dengan tanggal
-<!--                        <span-->
-<!--                            t-field="doc.end_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
+                        <!--                        <span-->
+                        <!--                            t-field="doc.end_date" t-options='{"format":"dd MMMM yyyy"}'></span>-->
                         (<b>"Jangka Waktu"</b>).
                     </li>
 
@@ -120,10 +127,12 @@
 
             <br/>
 
-            <p>
-                <b>Pasal 3<br/>HARGA DAN PEMBAYARAN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 3<br/>HARGA DAN PEMBAYARAN
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -170,12 +179,14 @@
                 </ol>
             </p>
 
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 4<br/>HAK DAN KEWAJIBAN PARA PIHAK
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 4<br/>HAK DAN KEWAJIBAN PARA PIHAK
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -230,10 +241,12 @@
 
             <br/>
 
-            <p>
-                <b>Pasal 5<br/>PEMBATASAN TANGGUNG JAWAB
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 5<br/>PEMBATASAN TANGGUNG JAWAB
+                    </b>
+                </p>
+            </center>
 
             <p>
                 PIHAK KEDUA bersedia untuk melepaskan tanggung jawab PIHAK PERTAMA, afiliasi-afiliasi PIHAK
@@ -244,11 +257,14 @@
             </p>
 
             <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 6<br/>PENGAKHIRAN PERJANJIAN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 6<br/>PENGAKHIRAN PERJANJIAN
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -292,11 +308,14 @@
             </p>
 
             <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 7<br/>KERAHASIAAN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 7<br/>KERAHASIAAN
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -363,12 +382,13 @@
                 </ol>
             </p>
 
-            <br/>
 
-            <p>
-                <b>Pasal 8<br/>WANPRESTASI
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 8<br/>WANPRESTASI
+                    </b>
+                </p>
+            </center>
 
             <p>
                 Apabila salah satu Pihak lalai atau gagal (<b>"Pihak Yang Melanggar"</b>) melaksanakan salah satu
@@ -380,12 +400,14 @@
                 Perpanjangan, tanpa dikenai denda atau kompensasi apa pun.
             </p>
 
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 9<br/>KEADAAN KAHAR
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 9<br/>KEADAAN KAHAR
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -426,10 +448,12 @@
 
             <br/>
 
-            <p>
-                <b>Pasal 10<br/>HUKUM YANG BERLAKU DAN PENYELESAIAN PERSELISIHAN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 10<br/>HUKUM YANG BERLAKU DAN PENYELESAIAN PERSELISIHAN
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -455,12 +479,12 @@
                 </ol>
             </p>
 
-            <br/>
-
-            <p>
-                <b>Pasal 11<br/>HAK ATAS KEKAYAAN INTELEKTUAL
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 11<br/>HAK ATAS KEKAYAAN INTELEKTUAL
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -477,12 +501,14 @@
                 </ol>
             </p>
 
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>Pasal 12<br/>LAIN-LAIN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>Pasal 12<br/>LAIN-LAIN
+                    </b>
+                </p>
+            </center>
 
             <p>
                 <ol>
@@ -662,12 +688,12 @@
             </p>
 
             <center>
-                <table border="0" style="text-align: center;">
+                <table border="0" style="text-align: center; width:100%; table-layout:fixed;">
                     <tr>
-                        <td>
+                        <td style="max-width:50%">
                             <b>PIHAK PERTAMA</b>
                         </td>
-                        <td>
+                        <td style="max-width:50%">
                             <b>PIHAK KEDUA</b>
                         </td>
                     </tr>
@@ -682,8 +708,8 @@
                         </td>
                     </tr>
                     <tr>
-                        <td></td>
-                        <td></td>
+                        <td height="150"></td>
+                        <td height="150"></td>
                     </tr>
                     <tr>
                         <td>
@@ -706,13 +732,14 @@
                 </table>
             </center>
 
-            <br/>
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>LAMPIRAN 1<br/>Jenis dan Harga Produk
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>LAMPIRAN 1<br/>Jenis dan Harga Produk
+                    </b>
+                </p>
+            </center>
 
             <table class="table table-sm o_main_table">
                 <thead style="display: table-row-group">
@@ -735,10 +762,12 @@
                                 <span t-field="line.mc_qty_kontrak"/>
                             </td>
                             <td name="td_price" class="text-right">
-                                Rp. <span t-esc="line.mc_harga_produk"/>
+                                Rp.
+                                <span t-esc="line.mc_harga_produk"/>
                             </td>
                             <td name="td_price_discount" class="text-right">
-                                Rp. <span t-esc="line.mc_harga_diskon"/>
+                                Rp.
+                                <span t-esc="line.mc_harga_diskon"/>
                             </td>
                             <td name="td_period">
                                 <span t-field="line.mc_period"/>
@@ -753,14 +782,13 @@
                     <tr>
                         <td colspan="5" class="text-right">Total</td>
                         <td name="td_total" class="text-right">
-                            Rp. <span t-esc="doc.mc_total"/>
+                            Rp.
+                            <span t-esc="doc.mc_total"/>
                         </td>
                     </tr>
                 </tbody>
             </table>
 
-            <br/>
-            <br/>
 
             <p>
                 Catatan:
@@ -782,13 +810,14 @@
                 </ol>
             </p>
 
-            <br/>
-            <br/>
+            <p style="page-break-before:always;"></p>
 
-            <p>
-                <b>LAMPIRAN 2<br/>TATACARA DAN TERMIN PEMBAYARAN
-                </b>
-            </p>
+            <center>
+                <p>
+                    <b>LAMPIRAN 2<br/>TATACARA DAN TERMIN PEMBAYARAN
+                    </b>
+                </p>
+            </center>
 
             <table class="table table-sm o_main_table">
                 <thead style="display: table-row-group">
@@ -811,10 +840,12 @@
                                 <span t-field="line.mc_qty_kontrak"/>
                             </td>
                             <td name="td_price" class="text-right">
-                                Rp. <span t-esc="line.mc_harga_produk"/>
+                                Rp.
+                                <span t-esc="line.mc_harga_produk"/>
                             </td>
                             <td name="td_price_discount" class="text-right">
-                                Rp. <span t-esc="line.mc_harga_diskon"/>
+                                Rp.
+                                <span t-esc="line.mc_harga_diskon"/>
                             </td>
                             <td name="td_period">
                                 <span t-field="line.mc_period"/>
@@ -829,7 +860,8 @@
                     <tr>
                         <td colspan="5" class="text-right">Total</td>
                         <td name="td_total" class="text-right">
-                            Rp. <span t-esc="doc.mc_total"/>
+                            Rp.
+                            <span t-esc="doc.mc_total"/>
                         </td>
                     </tr>
                 </tbody>
